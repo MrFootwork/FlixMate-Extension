@@ -25,6 +25,9 @@ devDependencies:
   '@vitejs/plugin-react':
     specifier: ^4.3.4
     version: 4.3.4(vite@6.0.3)
+  chrome-types:
+    specifier: ^0.1.325
+    version: 0.1.325
   eslint:
     specifier: ^9.15.0
     version: 9.16.0
@@ -963,6 +966,10 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+    dev: true
+
+  /chrome-types@0.1.325:
+    resolution: {integrity: sha512-ZBYwAoUa/piEK3RSFuN21PP0gXmtlkTfaq1UdowkRQTmoNT4w31MbmwckVYnyrUV36YCGAtpLFqVphIQtBqYFQ==}
     dev: true
 
   /color-convert@2.0.1:
