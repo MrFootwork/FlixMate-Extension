@@ -15,7 +15,10 @@
   "content_scripts": [
     {
       "js": ["index.js"],
-      "matches": ["http://localhost:5173/*"]
+      "matches": [
+        "http://localhost:5173/*",
+        "https://flixmate-client.onrender.com/*"
+      ]
     },
     {
       "js": ["flixmate.js"],
@@ -24,6 +27,6 @@
   ],
   "permissions": ["storage"],
   "env": {
-    "API_URL": "http://localhost:5005"
+    "API_URL": "https://flixmate-server.onrender.com"
   }
 }
