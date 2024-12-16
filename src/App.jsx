@@ -67,29 +67,91 @@ function App() {
     }
   }, [socket])
 
+  // Load image
+  // BUG Image doesn't load
+  const imageURL = chrome.runtime.getURL('chat-icon.png')
+
+  // Messenger
+  const [messengerIsOpen, setMessengerIsOpen] = useState(false)
+
+  function toggleMessenger() {
+    setMessengerIsOpen(prev => !prev)
+  }
+
   return (
     <div className='flixmateApp'>
-      <style>
-        {`.flixmateApp{
-        position: absolute;
-        width: 500px;
-        aspect-ratio: 1;
-        z-index: 50000;
-        top: 0;
-        left: 0;
-        background-color: white;
-        color: black;
-        font-size: larger;
-        }`}
-      </style>
       {connected ? (
         <></>
       ) : (
         //all the wotk should be done inside here, no components outside of this
-        <>{user ? user.email : 'Please connect'}</>
+        <>
+          {user ? (
+            <>
+              {!messengerIsOpen ? (
+                <div className='icon-container' onClick={toggleMessenger}>
+                  <p>{user.email}</p>
+                  <img src={imageURL} alt='open chat icon' />
+                </div>
+              ) : (
+                <>
+                  <div className='messenger-container'>
+                    <button onClick={toggleMessenger}>X</button>
+                    <p>THIS IS THE MESSENGER</p>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            'Please connect'
+          )}
+        </>
       )}
+      <style>
+        {
+          /* CSS */ `.icon-container{
+            position: absolute;
+            
+            aspect-ratio: 1;
+            z-index: 50000;
+            top: 0;
+            right: 1rem;
+            color: white;
+            font-size: x-large;
+        }`
+        }
+
+        {
+          /* CSS */ `.messenger-container{
+            position: absolute;
+            
+            aspect-ratio: 1;
+            z-index: 50000;
+            top: 0;
+            right: 1rem;
+            color: white;
+            font-size: x-large;
+        }`
+        }
+
+        {
+          //   /* CSS */ `.flixmateApp{
+          //     position: absolute;
+          //     width: 500px;
+          //     aspect-ratio: 1;
+          //     z-index: 50000;
+          //     top: 0;
+          //     left: 0;
+          //     background-color: white;
+          //     color: black;
+          //     font-size: larger;
+          // }`
+        }
+      </style>
     </div>
   )
 }
 
 export default App
+
+// ATTRIBUTIONS
+// <a href="https://www.flaticon.com/free-icons/comments" title="comments icons">Comments icons created by Freepik - Flaticon</a>
