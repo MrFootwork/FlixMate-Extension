@@ -1,0 +1,13 @@
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+}
+
+#main {
+  width: 300px;
+  background-color: black;
+  color: white;
+  font-size: x-large;
+}
