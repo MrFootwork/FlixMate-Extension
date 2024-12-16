@@ -57,6 +57,10 @@ function App() {
     if (socket) {
       console.log('Trying to join room ', room)
       socket.emit('join-room', room)
+      socket.on('error', error => {
+        console.log(error)
+        // Display the Error once the UI is done
+      })
       socket.on('joined-room', () => {
         console.log(`Succesfully joined the room ${room}`)
       })
