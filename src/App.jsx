@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
-// import './App.css'
+import Messenger from './components/Messenger'
 
 const WS_URL = import.meta.env.VITE_WS_URL
 console.log(WS_URL)
@@ -17,40 +17,39 @@ if (window.location.search) {
   })
 }
 
-// console.log(window.location)
-
 function App() {
-  const [connected, setConnected] = useState(null)
+  const [token, setToken] = useState(null)
+  const [savedToken, setSavedToken] = useState(null)
   const [user, setUser] = useState(null)
   const [socket, setSocket] = useState(null)
-  // console.log(params, room)
 
   // Checks if the user is still connected
   useEffect(() => {
-    chrome.storage.sync.get(['token'], token => {
-      if (token) {
-        setConnected(token.token)
-        chrome.storage.sync.get(['user'], result => {
-          setUser(result.user)
-          // console.log(result.user)
+    chrome.storage.sync.get(['token'], tokenResponse => {
+      if (tokenResponse) {
+        setToken(tokenResponse.token)
+        setSavedToken(tokenResponse.token)
+
+        chrome.storage.sync.get(['user'], userResponse => {
+          setUser(userResponse.user)
         })
       }
     })
-    setTimeout(() => setConnected(null), 2000)
-  }, [connected])
+
+    // Necessary to get a fresh token, if user data changed
+    setTimeout(() => setToken(null), 2000)
+  }, [token])
 
   // connects the socket one time when the user is retreived
   useEffect(() => {
-    if (connected && !socket) {
+    if (token && !socket) {
       setSocket(
         io(WS_URL, {
-          auth: {
-            token: connected,
-          },
+          auth: { token },
         })
       )
     }
-  }, [connected])
+  }, [token])
 
   // Runs on socket connection to set-up the events
   useEffect(() => {
@@ -59,7 +58,7 @@ function App() {
       socket.emit('join-room', room)
       socket.on('error', error => {
         console.log(error)
-        // Display the Error once the UI is done
+        // FIXME Display the Error once the UI is done
       })
       socket.on('joined-room', () => {
         console.log(`Succesfully joined the room ${room}`)
@@ -78,73 +77,110 @@ function App() {
     setMessengerIsOpen(prev => !prev)
   }
 
+  // LISTENER FOR VIDEO PLAYER
+  // Define event handlers
+  const handlePlay = video => {
+    console.log(
+      'Video is playing',
+      video.currentTime,
+      room,
+      user,
+      token,
+      savedToken
+    )
+    socket.emit('video-play', video.currentTime, room, user, token)
+  }
+
+  const handlePause = video => {
+    console.log('Video is paused', video.currentTime)
+    socket.emit('video-pause', video.currentTime)
+  }
+
+  const handleSeeked = video => {
+    console.log('Video seeked', video.currentTime)
+    socket.emit('video-seeked', video.currentTime)
+  }
+
+  // Grab the video element dynamically
+  useEffect(() => {
+    const videoElement = document.querySelector('video')
+
+    if (!videoElement) {
+      console.error('Video element not found!')
+      return
+    } else {
+      console.log('Video element found 🎉')
+    }
+
+    // Attach event listeners
+    videoElement.addEventListener('play', () => handlePlay(videoElement))
+    videoElement.addEventListener('pause', () => handlePause(videoElement))
+    videoElement.addEventListener('seeked', () => handleSeeked(videoElement))
+
+    // Cleanup function to remove event listeners
+    return () => {
+      videoElement.removeEventListener('play', handlePlay)
+      videoElement.removeEventListener('pause', handlePause)
+      videoElement.removeEventListener('seeking', () =>
+        handleSeeking(videoElement)
+      )
+      videoElement.removeEventListener('seeked', () =>
+        handleSeeked(videoElement)
+      )
+    }
+  }, [document.querySelector('video')])
+
   return (
     <div className='flixmateApp'>
-      {connected ? (
-        <></>
-      ) : (
-        //all the wotk should be done inside here, no components outside of this
+      {token && user ? (
         <>
-          {user ? (
-            <>
-              {!messengerIsOpen ? (
-                <div className='icon-container' onClick={toggleMessenger}>
-                  <p>{user.email}</p>
-                  <img src={imageURL} alt='open chat icon' />
-                </div>
-              ) : (
-                <>
-                  <div className='messenger-container'>
-                    <button onClick={toggleMessenger}>X</button>
-                    <p>THIS IS THE MESSENGER</p>
-                  </div>
-                </>
-              )}
-            </>
+          {!messengerIsOpen ? (
+            <div className='icon-container' onClick={toggleMessenger}>
+              <p>{user.email}</p>
+              <img src={imageURL} alt='open chat icon' />
+            </div>
           ) : (
-            'Please connect'
+            <Messenger toggler={toggleMessenger} />
           )}
         </>
+      ) : (
+        <>{'Please connect'}</>
       )}
+
       <style>
         {
           /* CSS */ `.icon-container{
             position: absolute;
             
             aspect-ratio: 1;
-            z-index: 50000;
             top: 0;
             right: 1rem;
             color: white;
             font-size: x-large;
-        }`
+          }`
         }
 
         {
-          /* CSS */ `.messenger-container{
-            position: absolute;
-            
-            aspect-ratio: 1;
+          /* CSS */ `.flixmateApp{
+            /* App Styling */
             z-index: 50000;
-            top: 0;
-            right: 1rem;
-            color: white;
-            font-size: x-large;
-        }`
-        }
 
-        {
-          //   /* CSS */ `.flixmateApp{
-          //     position: absolute;
-          //     width: 500px;
-          //     aspect-ratio: 1;
-          //     z-index: 50000;
-          //     top: 0;
-          //     left: 0;
-          //     background-color: white;
-          //     color: black;
-          //     font-size: larger;
-          // }`
+            /* Primary */
+            --color-background: #121212;
+            --color-background-off: hsl(from var(--color-background) h s calc(l + 5));
+            --color-highlight: #e50914;
+            --color-text: #f5f5f5;
+
+            /* Secondary */
+            --color-background-secondary: #3a4b5b;
+            --color-background-secondary-off: hsl(
+              from var(--color-background-secondary) h s calc(l - 5)
+            );
+
+            /* Neutral */
+            --color-neutral: #3a4b5b;
+            --color-black: #3a4b5b;
+          }`
         }
       </style>
     </div>

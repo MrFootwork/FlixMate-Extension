@@ -6,6 +6,7 @@ function connectUser() {
   chrome.storage.sync.get(['token'], token => {
     console.log('Getting', token)
     if (!token) return
+
     fetch(API_URL + '/users/me', {
       method: 'GET',
       headers: {
