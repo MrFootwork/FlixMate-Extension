@@ -14,3 +14,18 @@ export default defineConfig({
     },
   },
 })
+
+export async function generateNonReactProject() {
+  return defineConfig({
+    plugins: [],
+    build: {
+      rollupOptions: {
+        input: 'flixMateConnect.js',
+        output: {
+          dir: 'dist',
+          entryFileNames: 'flixMateConnect.js',
+        },
+      },
+    },
+  })
+}

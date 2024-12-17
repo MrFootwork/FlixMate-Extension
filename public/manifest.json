@@ -23,6 +23,15 @@
     {
       "js": ["flixmate.js"],
       "matches": ["https://www.netflix.com/*"]
+    },
+    {
+      "js": ["flixmateConnect.js"],
+      "matches": ["https://www.netflix.com/*"]
+    },
+    {
+      "js": ["flixmatePlayer.js"],
+      "matches": ["https://www.netflix.com/*"],
+      "world": "MAIN"
     }
   ],
   "permissions": ["storage"],

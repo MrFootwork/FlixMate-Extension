@@ -22,25 +22,35 @@ function App() {
   const [savedToken, setSavedToken] = useState(null)
   const [user, setUser] = useState(null)
   const [socket, setSocket] = useState(null)
+  const [joined, setJoined] = useState(false)
   const [video, setVideo] = useState(null)
 
   // Checks if the user is still connected
   useEffect(() => {
-    chrome.storage.sync.get(['token'], tokenResponse => {
-      if (tokenResponse) {
-        setToken(tokenResponse.token)
-        setSavedToken(tokenResponse.token)
-
-        chrome.storage.sync.get(['user'], userResponse => {
-          setUser(userResponse.user)
-        })
+    const listener = window.addEventListener('message', message => {
+      const { type, data } = message.data
+      switch (type) {
+        case 'auth': {
+          setToken(data.connected)
+          setUser(data.user)
+          break
+        }
+        case 'player':
+          setVideo(data.video)
+          break
+        case 'play':
+          handlePlay()
+          break
+        case 'pause':
+          handlePause()
+          break
+        case 'seek':
+          handleSeeked(data.time)
+          break
       }
     })
-
-    // Necessary to get a fresh token, if user data changed
-    // setTimeout(() => setToken(null), 2000)
-  }, [token])
-
+    return () => window.removeEventListener('message', listener)
+  }, [socket])
   // connects the socket one time when the user is retreived
   useEffect(() => {
     if (token && !socket) {
@@ -54,7 +64,7 @@ function App() {
 
   // Load image
   // BUG Image doesn't load
-  const imageURL = chrome.runtime.getURL('chat-icon.png')
+  // const imageURL = chrome.runtime.getURL('chat-icon.png')
 
   // Messenger
   const [messengerIsOpen, setMessengerIsOpen] = useState(false)
@@ -66,8 +76,11 @@ function App() {
   // Runs on socket connection to set-up the events
   useEffect(() => {
     if (socket) {
-      console.log('Trying to join room ', room)
-      socket.emit('join-room', room)
+      if (!joined) {
+        console.log('Trying to join room ', room)
+        socket.emit('join-room', room)
+        setJoined(true)
+      }
 
       socket.on('error', error => {
         console.log(error)
@@ -79,88 +92,63 @@ function App() {
       })
 
       // Listen for video events from server
-      socket.on('netflix', ({ eventType, videoTime, user }) => {
-        console.log('SOCKET from server: ', socket.rooms)
+      socket.on('netflix-send', ({ eventType, videoTime, eventUser }) => {
+        const myRequest = eventUser._id === user._id
+        console.log('SOCKET from server: ', eventType)
 
-        const video = document.querySelector('video')
-        console.log(`🚀 ~ socket.on ~ video:`, video.currentTime)
+        if (!video) return
+        console.log(`🚀 ~ socket.on ~ video:`, 'My request? ', myRequest)
 
         switch (eventType) {
           case 'play':
-            video.currentTime = videoTime
-            video.play()
-            console.log('Playing by ', user.name)
+            window.postMessage({ type: 'x-play', data: {} })
             break
 
           case 'pause':
-            video.pause()
-            console.log('Paused by ', user.name)
+            window.postMessage({ type: 'x-pause', data: {} })
             break
 
           case 'seeked':
-            video.currentTime = videoTime
-            console.log('Seeked by ', user.name)
+            window.postMessage({ type: 'x-seek', data: {} })
             break
 
           default:
             break
         }
       })
+      return () => {
+        socket.off('error')
+        socket.off('joined-room')
+        socket.off('netflix-send')
+      }
     }
-  }, [socket])
+  }, [socket, video])
 
   // LISTENER FOR VIDEO PLAYER
   // Define event handlers
-  const handlePlay = video => {
-    console.log('Video is playing', video.currentTime)
+  const handlePlay = _ => {
+    console.log('Video is playing ', socket)
     socket.emit('netflix', {
       type: 'play',
-      videoTime: video.currentTime,
+      videoTime: null,
     })
   }
 
-  const handlePause = video => {
-    console.log('Video is paused', video.currentTime)
+  const handlePause = _ => {
+    console.log('Video is paused')
     socket.emit('netflix', {
       type: 'pause',
-      videoTime: video.currentTime,
+      videoTime: null,
     })
   }
 
-  const handleSeeked = video => {
-    console.log('Video seeked', video.currentTime)
+  const handleSeeked = time => {
+    console.log('Video seeked')
     socket.emit('netflix', {
       type: 'seeked',
-      videoTime: video.currentTime,
+      videoTime: time,
     })
   }
-
-  // Grab the video element dynamically
-  useEffect(() => {
-    if (!video) {
-      const interval = setInterval(() => {
-        setVideo(document.querySelector('video'))
-      }, 1000)
-      return () => clearInterval(interval)
-    }
-    console.log('Found Video')
-  }, [video])
-
-  useEffect(() => {
-    if (!video) return
-
-    // Attach event listeners
-    video.addEventListener('play', () => handlePlay(video))
-    video.addEventListener('pause', () => handlePause(video))
-    video.addEventListener('seeked', () => handleSeeked(video))
-
-    // Cleanup function to remove event listeners
-    return () => {
-      video.removeEventListener('play', () => handlePlay(video))
-      video.removeEventListener('pause', () => handlePause(video))
-      video.removeEventListener('seeked', () => handleSeeked(video))
-    }
-  }, [video])
 
   return (
     <div className='flixmateApp'>
