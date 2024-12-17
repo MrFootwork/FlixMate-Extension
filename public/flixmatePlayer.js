@@ -32,7 +32,7 @@ const interval = setInterval(() => {
     })
     videoElement.addEventListener('seeked', e => {
       if (frozen) return
-      window.postMessage({type: 'seek', data{time:video.getCurrentTime()}})
+      window.postMessage({type: 'seek', data{time:video.getCurrentTime()})
     })
     clearInterval(interval)
   }
