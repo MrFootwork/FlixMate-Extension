@@ -51,21 +51,6 @@ function App() {
     }
   }, [token])
 
-  // Runs on socket connection to set-up the events
-  useEffect(() => {
-    if (socket) {
-      console.log('Trying to join room ', room)
-      socket.emit('join-room', room)
-      socket.on('error', error => {
-        console.log(error)
-        // FIXME Display the Error once the UI is done
-      })
-      socket.on('joined-room', () => {
-        console.log(`Succesfully joined the room ${room}`)
-      })
-    }
-  }, [socket])
-
   // Load image
   // BUG Image doesn't load
   const imageURL = chrome.runtime.getURL('chat-icon.png')
@@ -77,28 +62,53 @@ function App() {
     setMessengerIsOpen(prev => !prev)
   }
 
+  // Runs on socket connection to set-up the events
+  useEffect(() => {
+    if (socket) {
+      console.log('Trying to join room ', room)
+      socket.emit('join-room', room)
+
+      socket.on('error', error => {
+        console.log(error)
+        // FIXME Display the Error once the UI is done
+      })
+
+      socket.on('joined-room', () => {
+        console.log(`Succesfully joined the room ${room}`)
+      })
+
+      // Listen for video events from server
+      socket.on('netflix', data => {
+        console.log('SOCKET from server: ', socket.rooms)
+        console.log('DATA: ', data)
+      })
+    }
+  }, [socket])
+
   // LISTENER FOR VIDEO PLAYER
   // Define event handlers
   const handlePlay = video => {
-    console.log(
-      'Video is playing',
-      video.currentTime,
-      room,
-      user,
-      token,
-      savedToken
-    )
-    socket.emit('video-play', video.currentTime, room, user, token)
+    console.log('Video is playing', video.currentTime)
+    socket.emit('netflix', {
+      type: 'play',
+      videoTime: video.currentTime,
+    })
   }
 
   const handlePause = video => {
     console.log('Video is paused', video.currentTime)
-    socket.emit('video-pause', video.currentTime)
+    socket.emit('netflix', {
+      type: 'pause',
+      videoTime: video.currentTime,
+    })
   }
 
   const handleSeeked = video => {
     console.log('Video seeked', video.currentTime)
-    socket.emit('video-seeked', video.currentTime)
+    socket.emit('netflix', {
+      type: 'seeked',
+      videoTime: video.currentTime,
+    })
   }
 
   // Grab the video element dynamically
@@ -121,9 +131,6 @@ function App() {
     return () => {
       videoElement.removeEventListener('play', handlePlay)
       videoElement.removeEventListener('pause', handlePause)
-      videoElement.removeEventListener('seeking', () =>
-        handleSeeking(videoElement)
-      )
       videoElement.removeEventListener('seeked', () =>
         handleSeeked(videoElement)
       )
