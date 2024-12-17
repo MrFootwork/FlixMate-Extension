@@ -129,8 +129,8 @@ function App() {
 
     // Cleanup function to remove event listeners
     return () => {
-      videoElement.removeEventListener('play', handlePlay)
-      videoElement.removeEventListener('pause', handlePause)
+      videoElement.removeEventListener('play', () => handlePlay(videoElement))
+      videoElement.removeEventListener('pause', () => handlePause(videoElement))
       videoElement.removeEventListener('seeked', () =>
         handleSeeked(videoElement)
       )
