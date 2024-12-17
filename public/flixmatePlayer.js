@@ -32,7 +32,7 @@ const interval = setInterval(() => {
     })
     videoElement.addEventListener('seeked', e => {
       if (frozen) return
-      console.log(e)
+      window.postMessage({type: 'seek', data{time:video.getCurrentTime()}})
     })
     clearInterval(interval)
   }
@@ -56,7 +56,7 @@ window.addEventListener('message', message => {
     }
     case 'x-seek': {
       frozen = true
-      player.seek(convertMillisToTimestamp(10000))
+      player.seek(convertMillisToTimestamp(data.time))
       player.play()
       setTimeout(() => {
         frozen = false

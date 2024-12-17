@@ -109,7 +109,7 @@ function App() {
             break
 
           case 'seeked':
-            window.postMessage({ type: 'x-seek', data: {} })
+            window.postMessage({ type: 'x-seek', data: { time: videoTime } })
             break
 
           default:
