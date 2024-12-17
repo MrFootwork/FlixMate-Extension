@@ -78,9 +78,32 @@ function App() {
       })
 
       // Listen for video events from server
-      socket.on('netflix', data => {
+      socket.on('netflix', ({ eventType, videoTime, user }) => {
         console.log('SOCKET from server: ', socket.rooms)
-        console.log('DATA: ', data)
+
+        const video = document.querySelector('video')
+        console.log(`🚀 ~ socket.on ~ video:`, video.currentTime)
+
+        switch (eventType) {
+          case 'play':
+            video.currentTime = videoTime
+            video.play()
+            console.log('Playing by ', user.name)
+            break
+
+          case 'pause':
+            video.pause()
+            console.log('Paused by ', user.name)
+            break
+
+          case 'seeked':
+            video.currentTime = videoTime
+            console.log('Seeked by ', user.name)
+            break
+
+          default:
+            break
+        }
       })
     }
   }, [socket])
