@@ -22,6 +22,7 @@ function App() {
   const [savedToken, setSavedToken] = useState(null)
   const [user, setUser] = useState(null)
   const [socket, setSocket] = useState(null)
+  const [video, setVideo] = useState(null)
 
   // Checks if the user is still connected
   useEffect(() => {
@@ -37,7 +38,7 @@ function App() {
     })
 
     // Necessary to get a fresh token, if user data changed
-    setTimeout(() => setToken(null), 2000)
+    // setTimeout(() => setToken(null), 2000)
   }, [token])
 
   // connects the socket one time when the user is retreived
@@ -136,29 +137,30 @@ function App() {
 
   // Grab the video element dynamically
   useEffect(() => {
-    const videoElement = document.querySelector('video')
-
-    if (!videoElement) {
-      console.error('Video element not found!')
-      return
-    } else {
-      console.log('Video element found 🎉')
+    if (!video) {
+      const interval = setInterval(() => {
+        setVideo(document.querySelector('video'))
+      }, 1000)
+      return () => clearInterval(interval)
     }
+    console.log('Found Video')
+  }, [video])
+
+  useEffect(() => {
+    if (!video) return
 
     // Attach event listeners
-    videoElement.addEventListener('play', () => handlePlay(videoElement))
-    videoElement.addEventListener('pause', () => handlePause(videoElement))
-    videoElement.addEventListener('seeked', () => handleSeeked(videoElement))
+    video.addEventListener('play', () => handlePlay(video))
+    video.addEventListener('pause', () => handlePause(video))
+    video.addEventListener('seeked', () => handleSeeked(video))
 
     // Cleanup function to remove event listeners
     return () => {
-      videoElement.removeEventListener('play', () => handlePlay(videoElement))
-      videoElement.removeEventListener('pause', () => handlePause(videoElement))
-      videoElement.removeEventListener('seeked', () =>
-        handleSeeked(videoElement)
-      )
+      video.removeEventListener('play', () => handlePlay(video))
+      video.removeEventListener('pause', () => handlePause(video))
+      video.removeEventListener('seeked', () => handleSeeked(video))
     }
-  }, [document.querySelector('video')])
+  }, [video])
 
   return (
     <div className='flixmateApp'>
@@ -167,7 +169,7 @@ function App() {
           {!messengerIsOpen ? (
             <div className='icon-container' onClick={toggleMessenger}>
               <p>{user.email}</p>
-              <img src={imageURL} alt='open chat icon' />
+              {/* <img src={imageURL} alt='open chat icon' /> */}
             </div>
           ) : (
             <Messenger toggler={toggleMessenger} />
