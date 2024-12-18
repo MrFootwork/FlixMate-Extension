@@ -62,8 +62,6 @@ window.addEventListener('message', message => {
     case 'x-play': {
       // console.log('Received a message ', message)
       if (!player.isPlaying()) {
-        console.log(message.data.time)
-        player.seek(message.data.time)
         player.play()
       }
       break
@@ -79,11 +77,11 @@ window.addEventListener('message', message => {
       setTimeout(() => (frozen = false), 1000)
       console.log(
         'converted time :',
-        convertMillisToTimestamp(message.data.time),
+        // convertMillisToTimestamp(message.data.time),
         message.data
       )
-      player.seek(convertMillisToTimestamp(message.data.time))
-      player.play()
+      player.seek(message.data.data.time)
+      // player.play()
       setTimeout(() => {
         frozen = false
       }, 2000)
