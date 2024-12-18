@@ -33,8 +33,6 @@ function setUpEvents() {
   videoElement.addEventListener('seeked', e => {
     console.log('Seek Event')
     if (frozen) return
-    frozen = true
-    setTimeout(() => (frozen = false), 1000)
     window.postMessage({
       type: 'seek',
       data: { time: player.getCurrentTime() },
@@ -62,22 +60,29 @@ window.addEventListener('message', message => {
   if (frozen) return
   switch (type) {
     case 'x-play': {
-      console.log('Received a message ', message)
+      // console.log('Received a message ', message)
       if (!player.isPlaying()) {
-        console.log(data.time)
-        player.seek(data.time)
+        console.log(message.data.time)
+        player.seek(message.data.time)
         player.play()
       }
       break
     }
     case 'x-pause': {
-      console.log('Received a message ', message)
+      // console.log('Received a message ', message)
       if (!player.isPaused()) player.pause()
       break
     }
     case 'x-seek': {
       console.log('Received a message ', message)
-      player.seek(convertMillisToTimestamp(data.time))
+      frozen = true
+      setTimeout(() => (frozen = false), 1000)
+      console.log(
+        'converted time :',
+        convertMillisToTimestamp(message.data.time),
+        message.data
+      )
+      player.seek(convertMillisToTimestamp(message.data.time))
       player.play()
       setTimeout(() => {
         frozen = false
