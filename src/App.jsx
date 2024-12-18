@@ -98,6 +98,7 @@ function App() {
 
         if (!video) return
         console.log(`🚀 ~ socket.on ~ video:`, 'My request? ', myRequest)
+        if (myRequest) return
 
         switch (eventType) {
           case 'play':

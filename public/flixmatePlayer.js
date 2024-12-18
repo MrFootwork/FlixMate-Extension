@@ -16,34 +16,39 @@ let videoElement = document.querySelector('video')
 let frozen = false
 // console.log(player)
 
+function setUpEvents() {
+  videoElement.addEventListener('play', () => {
+    console.log('Play Event ')
+    if (frozen) return
+    window.postMessage({
+      type: 'play',
+      data: { time: player.getCurrentTime() },
+    })
+  })
+  videoElement.addEventListener('pause', () => {
+    console.log('Pause Event')
+    if (frozen) return
+    window.postMessage({ type: 'pause', data: {} })
+  })
+  videoElement.addEventListener('seeked', e => {
+    console.log('Seek Event')
+    if (frozen) return
+    frozen = true
+    setTimeout(() => (frozen = false), 1000)
+    window.postMessage({
+      type: 'seek',
+      data: { time: player.getCurrentTime() },
+    })
+  })
+}
+
 const interval = setInterval(() => {
   player = getVideoPlayer()
   videoElement = document.querySelector('video')
   if (player && videoElement) {
     console.log('Found player: ', player)
     window.postMessage({ type: 'player', data: { video: true } })
-    videoElement.addEventListener('play', () => {
-      console.log('Play Event ')
-      if (frozen) return
-      window.postMessage({
-        type: 'play',
-        data: { time: player.getCurrentTime() },
-      })
-    })
-    videoElement.addEventListener('pause', () => {
-      console.log('Pause Event')
-      if (frozen) return
-      window.postMessage({ type: 'pause', data: {} })
-    })
-    videoElement.addEventListener('seeked', e => {
-      console.log('Seek Event')
-      if (frozen) return
-      frozen = true
-      window.postMessage({
-        type: 'seek',
-        data: { time: player.getCurrentTime() },
-      })
-    })
+    setUpEvents()
     clearInterval(interval)
   }
 }, 2000)
@@ -57,6 +62,7 @@ window.addEventListener('message', message => {
   if (frozen) return
   switch (type) {
     case 'x-play': {
+      console.log('Received a message ', message)
       if (!player.isPlaying()) {
         console.log(data.time)
         player.seek(data.time)
@@ -65,10 +71,12 @@ window.addEventListener('message', message => {
       break
     }
     case 'x-pause': {
+      console.log('Received a message ', message)
       if (!player.isPaused()) player.pause()
       break
     }
     case 'x-seek': {
+      console.log('Received a message ', message)
       player.seek(convertMillisToTimestamp(data.time))
       player.play()
       setTimeout(() => {
