@@ -1,0 +1,18 @@
+.messenger-container {
+  position: absolute;
+  z-index: 51;
+  bottom: 0px;
+  right: 0px;
+  width: 400px;
+  height: 100vh;
+  background-color: white;
+
+  button {
+    background-color: none;
+    border: 1px solid black;
+    top: 0px;
+    left: 0px;
+    width: 20px;
+    aspect-ratio: 1;
+  }
+}

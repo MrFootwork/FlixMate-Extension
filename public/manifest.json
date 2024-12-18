@@ -22,6 +22,7 @@
     },
     {
       "js": ["flixmate.js"],
+      "css": ["flixmate.css"],
       "matches": ["https://www.netflix.com/*"]
     },
     {

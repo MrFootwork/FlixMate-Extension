@@ -1,5 +1,7 @@
+import './App.css'
 import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
+import axios from 'axios'
 import Messenger from './components/Messenger'
 
 const WS_URL = import.meta.env.VITE_WS_URL
@@ -24,6 +26,23 @@ function App() {
   const [socket, setSocket] = useState(null)
   const [joined, setJoined] = useState(false)
   const [video, setVideo] = useState(null)
+  const [messages, setMessages] = useState(null)
+
+  async function getRoomMessages() {
+    if (!token) return
+    const { data } = await axios.get(WS_URL + '/rooms/' + room, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    console.log(data)
+    setMessages(data.messages)
+  }
+
+  useEffect(() => {
+    if (messages) return
+    getRoomMessages()
+  }, [token])
 
   // Checks if the user is still connected
   useEffect(() => {
@@ -70,7 +89,11 @@ function App() {
   const [messengerIsOpen, setMessengerIsOpen] = useState(false)
 
   function toggleMessenger() {
-    setMessengerIsOpen(prev => !prev)
+    setMessengerIsOpen(!messengerIsOpen)
+  }
+
+  function sendMessage(text) {
+    socket.emit('receive-message', text)
   }
 
   // Runs on socket connection to set-up the events
@@ -89,6 +112,11 @@ function App() {
 
       socket.on('joined-room', () => {
         console.log(`Succesfully joined the room ${room}`)
+      })
+
+      socket.on('new-message', message => {
+        console.log('Received new message: ', message, messages)
+        setMessages([...messages, message])
       })
 
       // Listen for video events from server
@@ -121,9 +149,10 @@ function App() {
         socket.off('error')
         socket.off('joined-room')
         socket.off('netflix-send')
+        socket.off('new-message')
       }
     }
-  }, [socket, video])
+  }, [socket, video, messages])
 
   // LISTENER FOR VIDEO PLAYER
   // Define event handlers
@@ -152,59 +181,30 @@ function App() {
   }
 
   return (
-    <div className='flixmateApp'>
-      {token && user && socket ? (
-        <>
-          {!messengerIsOpen ? (
-            <div className='icon-container' onClick={toggleMessenger}>
-              <p>{user.email}</p>
-              {/* <img src={imageURL} alt='open chat icon' /> */}
-            </div>
-          ) : (
-            <Messenger toggler={toggleMessenger} socket={socket} />
-          )}
-        </>
-      ) : (
-        <>{'Please connect'}</>
-      )}
-
-      <style>
-        {
-          /* CSS */ `.icon-container{
-            position: absolute;
-            
-            aspect-ratio: 1;
-            top: 0;
-            right: 1rem;
-            color: white;
-            font-size: x-large;
-          }`
-        }
-
-        {
-          /* CSS */ `.flixmateApp{
-            /* App Styling */
-            z-index: 50000;
-
-            /* Primary */
-            --color-background: #121212;
-            --color-background-off: hsl(from var(--color-background) h s calc(l + 5));
-            --color-highlight: #e50914;
-            --color-text: #f5f5f5;
-
-            /* Secondary */
-            --color-background-secondary: #3a4b5b;
-            --color-background-secondary-off: hsl(
-              from var(--color-background-secondary) h s calc(l - 5)
-            );
-
-            /* Neutral */
-            --color-neutral: #3a4b5b;
-            --color-black: #3a4b5b;
-          }`
-        }
-      </style>
-    </div>
+    <>
+      <div className='flixmateApp'>
+        {token && user && socket ? (
+          <>
+            {!messengerIsOpen ? (
+              <div className='icon-container' onClick={toggleMessenger}>
+                {/* Or the Flixmate icon */}
+                <p>FM</p>
+                {/* <img src={imageURL} alt='open chat icon' /> */}
+              </div>
+            ) : (
+              <Messenger
+                toggler={toggleMessenger}
+                room={room}
+                sendMessage={sendMessage}
+                messages={messages}
+              />
+            )}
+          </>
+        ) : (
+          <>{'Please connect'}</>
+        )}
+      </div>
+    </>
   )
 }
 
