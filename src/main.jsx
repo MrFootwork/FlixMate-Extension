@@ -44,11 +44,30 @@ function addCSPMetaTag() {
 
 // loadCSS('flixmate.css', null)
 
-const flixMateRoot = document.createElement('div')
-console.log(flixMateRoot, document.querySelector('body'))
-document.querySelector('body').appendChild(flixMateRoot)
-createRoot(flixMateRoot).render(
-  // <StrictMode>
-  <App />
-  // </StrictMode>
-)
+function loadExtension() {
+  const interval = setInterval(() => {
+    if (document.querySelector('.watch-video')) {
+      console.log('Found player container')
+      const flixMateRoot = document.createElement('div')
+      console.log(flixMateRoot, document.querySelector('.watch-video'))
+      document.querySelector('.watch-video').appendChild(flixMateRoot)
+      createRoot(flixMateRoot).render(
+        // <StrictMode>
+        <App />
+        // </StrictMode>
+      )
+      clearInterval(interval)
+    }
+  }, 500)
+}
+
+loadExtension()
+
+// const flixMateRoot = document.createElement('div')
+// console.log(flixMateRoot, document.querySelector('body'))
+// document.querySelector('body').appendChild(flixMateRoot)
+// createRoot(flixMateRoot).render(
+//   // <StrictMode>
+//   <App />
+//   // </StrictMode>
+// )
