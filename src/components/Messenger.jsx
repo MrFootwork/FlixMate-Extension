@@ -1,4 +1,4 @@
-function Messenger({ toggler }) {
+function Messenger({ toggler, socket }) {
   return (
     <div className='messenger-container'>
       <button className='button-close' onClick={toggler}>

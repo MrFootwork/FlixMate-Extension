@@ -23,16 +23,26 @@ const interval = setInterval(() => {
     console.log('Found player: ', player)
     window.postMessage({ type: 'player', data: { video: true } })
     videoElement.addEventListener('play', () => {
+      console.log('Play Event ')
       if (frozen) return
-      window.postMessage({ type: 'play', data: {} })
+      window.postMessage({
+        type: 'play',
+        data: { time: player.getCurrentTime() },
+      })
     })
     videoElement.addEventListener('pause', () => {
+      console.log('Pause Event')
       if (frozen) return
       window.postMessage({ type: 'pause', data: {} })
     })
     videoElement.addEventListener('seeked', e => {
+      console.log('Seek Event')
       if (frozen) return
-      window.postMessage({type: 'seek', data{time:video.getCurrentTime()})
+      frozen = true
+      window.postMessage({
+        type: 'seek',
+        data: { time: player.getCurrentTime() },
+      })
     })
     clearInterval(interval)
   }
@@ -47,7 +57,11 @@ window.addEventListener('message', message => {
   if (frozen) return
   switch (type) {
     case 'x-play': {
-      if (!player.isPlaying()) player.play()
+      if (!player.isPlaying()) {
+        console.log(data.time)
+        player.seek(data.time)
+        player.play()
+      }
       break
     }
     case 'x-pause': {
@@ -55,7 +69,6 @@ window.addEventListener('message', message => {
       break
     }
     case 'x-seek': {
-      frozen = true
       player.seek(convertMillisToTimestamp(data.time))
       player.play()
       setTimeout(() => {

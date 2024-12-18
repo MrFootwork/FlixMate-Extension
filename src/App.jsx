@@ -39,7 +39,7 @@ function App() {
           setVideo(data.video)
           break
         case 'play':
-          handlePlay()
+          handlePlay(data.time)
           break
         case 'pause':
           handlePause()
@@ -94,14 +94,14 @@ function App() {
       // Listen for video events from server
       socket.on('netflix-send', ({ eventType, videoTime, eventUser }) => {
         const myRequest = eventUser._id === user._id
-        console.log('SOCKET from server: ', eventType)
+        console.log('SOCKET from server: ', eventType, videoTime)
 
         if (!video) return
         console.log(`🚀 ~ socket.on ~ video:`, 'My request? ', myRequest)
 
         switch (eventType) {
           case 'play':
-            window.postMessage({ type: 'x-play', data: {} })
+            window.postMessage({ type: 'x-play', data: { time: videoTime } })
             break
 
           case 'pause':
@@ -126,11 +126,11 @@ function App() {
 
   // LISTENER FOR VIDEO PLAYER
   // Define event handlers
-  const handlePlay = _ => {
+  const handlePlay = time => {
     console.log('Video is playing ', socket)
     socket.emit('netflix', {
       type: 'play',
-      videoTime: null,
+      videoTime: time,
     })
   }
 
@@ -152,7 +152,7 @@ function App() {
 
   return (
     <div className='flixmateApp'>
-      {token && user ? (
+      {token && user && socket ? (
         <>
           {!messengerIsOpen ? (
             <div className='icon-container' onClick={toggleMessenger}>
@@ -160,7 +160,7 @@ function App() {
               {/* <img src={imageURL} alt='open chat icon' /> */}
             </div>
           ) : (
-            <Messenger toggler={toggleMessenger} />
+            <Messenger toggler={toggleMessenger} socket={socket} />
           )}
         </>
       ) : (
