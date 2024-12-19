@@ -1,0 +1,58 @@
+:root {
+  /* ME card color */
+  --color-messenger-card-right: var(--color-background-tertiary);
+  /* card color */
+  --color-messenger-card-left: hsl(
+    from var(--color-messenger-card-right) h s calc(l + 20)
+  );
+  /* (edited) tag font color */
+  --color-messenger-card-left-edited: hsl(from var(--color-text) h s l / 0.3);
+}
+
+.message-card {
+  width: 100%;
+  padding-top: 0.75rem;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  color: var(--color-text);
+
+  .message-container {
+    position: relative;
+
+    padding: 2rem 4rem;
+    max-width: 80%;
+
+    border-radius: calc(4 * var(--border-round-l));
+    border-bottom-left-radius: var(--border-round-s);
+    background-color: hsl(from var(--color-messenger-card-left) h s l / 0.8);
+
+    .image-container {
+      border-radius: 50%;
+      aspect-ratio: 1;
+      width: 4rem;
+      overflow: hidden;
+
+      position: absolute;
+      left: -1rem;
+
+      img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  &.me {
+    .message-container {
+      align-self: flex-end;
+
+      border-radius: calc(2.5 * var(--border-round-l));
+      border-bottom-right-radius: var(--border-round-s);
+      background-color: hsl(from var(--color-messenger-card-right) h s l / 0.8);
+    }
+  }
+}

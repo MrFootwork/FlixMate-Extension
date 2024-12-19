@@ -1,11 +1,12 @@
 import './App.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { io } from 'socket.io-client'
 import axios from 'axios'
 import Messenger from './components/Messenger'
+import ChatIconSVG from './assets/chat-icon.svg'
 
 const WS_URL = import.meta.env.VITE_WS_URL
-console.log(WS_URL)
+// console.log(WS_URL)
 
 let params = null
 let room = null
@@ -21,11 +22,11 @@ if (window.location.search) {
 
 function App() {
   const [token, setToken] = useState(null)
-  const [savedToken, setSavedToken] = useState(null)
   const [user, setUser] = useState(null)
   const [socket, setSocket] = useState(null)
   const [joined, setJoined] = useState(false)
   const [video, setVideo] = useState(null)
+  const [roomObj, setRoomObj] = useState(null)
   const [messages, setMessages] = useState(null)
 
   async function getRoomMessages() {
@@ -35,8 +36,10 @@ function App() {
         Authorization: `Bearer ${token}`,
       },
     })
-    console.log(data)
+    console.log('ROOMS fetched', data)
+    setRoomObj(data)
     setMessages(data.messages)
+    console.log('MESSAGES read')
   }
 
   useEffect(() => {
@@ -80,6 +83,16 @@ function App() {
       )
     }
   }, [token])
+
+  useEffect(() => {
+    // Only runs on component destruction
+    return () => {
+      if (socket) {
+        socket.disconnect()
+        setSocket(null)
+      }
+    }
+  }, [socket])
 
   // Load image
   // BUG Image doesn't load
@@ -180,30 +193,60 @@ function App() {
     })
   }
 
+  // FIXME
+  // Mouse Move Listener
+  const [moved, setMoved] = useState(true)
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    window.addEventListener('mousemove', mouseMove)
+
+    return () => {
+      window.removeEventListener('mousemove', mouseMove)
+    }
+  }, [])
+
+  function mouseMove() {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+
+    setMoved(true)
+
+    timerRef.current = setTimeout(() => {
+      setMoved(false)
+    }, 2600)
+  }
+
   return (
     <>
-      <div className='flixmateApp'>
-        {token && user && socket ? (
-          <>
-            {!messengerIsOpen ? (
-              <div className='icon-container' onClick={toggleMessenger}>
-                {/* Or the Flixmate icon */}
-                <p>FM</p>
-                {/* <img src={imageURL} alt='open chat icon' /> */}
-              </div>
-            ) : (
-              <Messenger
-                toggler={toggleMessenger}
-                room={room}
-                sendMessage={sendMessage}
-                messages={messages}
-              />
-            )}
-          </>
-        ) : (
-          <>{'Please connect'}</>
-        )}
-      </div>
+      {!messengerIsOpen && !moved ? (
+        // Show nothing after 3s
+        <></>
+      ) : (
+        <div className='flixmateApp'>
+          {token && user && socket ? (
+            <>
+              {!messengerIsOpen ? (
+                <div className='icon-container' onClick={toggleMessenger}>
+                  <img src={ChatIconSVG} alt='Chat Icon' fill='white' />
+                </div>
+              ) : (
+                <Messenger
+                  isOpen={messengerIsOpen}
+                  toggler={toggleMessenger}
+                  user={user}
+                  room={roomObj}
+                  sendMessage={sendMessage}
+                  messages={messages}
+                />
+              )}
+            </>
+          ) : (
+            <>{'Please connect'}</>
+          )}
+        </div>
+      )}
     </>
   )
 }

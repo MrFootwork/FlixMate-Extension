@@ -44,7 +44,7 @@ const interval = setInterval(() => {
   player = getVideoPlayer()
   videoElement = document.querySelector('video')
   if (player && videoElement) {
-    console.log('Found player: ', player)
+    // console.log('Found player: ', player)
     window.postMessage({ type: 'player', data: { video: true } })
     setUpEvents()
     clearInterval(interval)
